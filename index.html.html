@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breathe - Meditation App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 10px;
+        }
+
+        .container {
+            text-align: center;
+            padding: 15px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-weight: 300;
+            margin-bottom: 8px;
+            letter-spacing: 3px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.5s forwards;
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 3vw, 1.2rem);
+            opacity: 0.8;
+            margin-bottom: 30px;
+            font-weight: 300;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1s forwards;
+        }
+
+        .breathing-container {
+            position: relative;
+            margin: 30px auto;
+            width: min(280px, 90vw);
+            height: min(280px, 90vw);
+        }
+
+        .breathing-circle {
+            width: min(180px, 70vw);
+            height: min(180px, 70vw);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
+        }
+
+        .breathing-circle.inhale {
+            transform: translate(-50%, -50%) scale(1.4);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 80px rgba(255, 255, 255, 0.4);
+        }
+
+        .breathing-circle.hold {
+            transform: translate(-50%, -50%) scale(1.4);
+            border-color: rgba(255, 200, 100, 0.8);
+            box-shadow: 0 0 100px rgba(255, 200, 100, 0.5);
+        }
+
+        .inner-circle {
+            width: 50%;
+            height: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            backdrop-filter: blur(5px);
+        }
+
+        .instruction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(1rem, 4vw, 1.5rem);
+            font-weight: 300;
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            white-space: nowrap;
+        }
+
+        .instruction.active {
+            opacity: 1;
+        }
+
+        .timer {
+            font-size: clamp(2.5rem, 10vw, 4rem);
+            font-weight: 200;
+            margin: 20px 0;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer.active {
+            opacity: 1;
+        }
+
+        .controls {
+            margin-top: 30px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1.5s forwards;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: clamp(12px, 3vw, 15px) clamp(20px, 5vw, 30px);
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            border: none;
+        }
+
+        .btn.primary:hover {
+            background: linear-gradient(45deg, #ff5252, #ffb300);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 2s forwards;
+            gap: 15px;
+        }
+
+        .stat {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-weight: 300;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0.3;
+            }
+            25% {
+                transform: translateY(-20px) translateX(10px) rotate(90deg);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translateY(-10px) translateX(-10px) rotate(180deg);
+                opacity: 0.3;
+            }
+            75% {
+                transform: translateY(-30px) translateX(5px) rotate(270deg);
+                opacity: 0.8;
+            }
+        }
+
+        .phase-indicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 300;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .breathing-container {
+                margin: 20px auto;
+            }
+
+            .stats {
+                margin-top: 25px;
+                gap: 10px;
+            }
+
+            .controls {
+                margin-top: 25px;
+            }
+        }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .container {
+                max-width: 600px;
+            }
+
+            .breathing-container {
+                width: 320px;
+                height: 320px;
+            }
+
+            .breathing-circle {
+                width: 220px;
+                height: 220px;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .container {
+                max-width: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <h1>BREATHE</h1>
+        <p class="subtitle">Find your center through mindful breathing</p>
+        
+        <div class="breathing-container">
+            <div class="phase-indicator" id="phaseIndicator"></div>
+            <div class="breathing-circle" id="breathingCircle">
+                <div class="inner-circle"></div>
+            </div>
+            <div class="instruction" id="instruction">Click Start to Begin</div>
+        </div>
+        
+        <div class="timer" id="timer">0:00</div>
+        
+        <div class="controls">
+            <button class="btn primary" id="startBtn" onclick="startBreathing()">Start</button>
+            <button class="btn" id="pauseBtn" onclick="pauseBreathing()" style="display: none;">Pause</button>
+            <button class="btn" id="resetBtn" onclick="resetBreathing()">Reset</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="cycles">0</div>
+                <div class="stat-label">Cycles</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="totalTime">0:00</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="longestHold">0s</div>
+                <div class="stat-label">Longest Hold</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isBreathing = false;
+        let currentPhase = 'ready';
+        let phaseTimer = null;
+        let sessionStartTime = null;
+        let totalCycles = 0;
+        let longestHold = 0;
+        let currentHoldTime = 0;
+        let holdStartTime = null;
+
+        const breathingCircle = document.getElementById('breathingCircle');
+        const instruction = document.getElementById('instruction');
+        const timer = document.getElementById('timer');
+        const phaseIndicator = document.getElementById('phaseIndicator');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        function updateTimer() {
+            if (!sessionStartTime) return;
+            
+            const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            timer.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateStats() {
+            document.getElementById('cycles').textContent = totalCycles;
+            
+            if (sessionStartTime) {
+                const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('totalTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            document.getElementById('longestHold').textContent = longestHold + 's';
+        }
+
+        function setPhase(phase, duration, nextPhase) {
+            currentPhase = phase;
+            
+            breathingCircle.className = 'breathing-circle ' + phase;
+            instruction.textContent = getInstructionText(phase);
+            phaseIndicator.textContent = phase.toUpperCase();
+            
+            if (phase === 'hold') {
+                holdStartTime = Date.now();
+            } else if (holdStartTime) {
+                currentHoldTime = Math.floor((Date.now() - holdStartTime) / 1000);
+                if (currentHoldTime > longestHold) {
+                    longestHold = currentHoldTime;
+                }
+                holdStartTime = null;
+            }
+            
+            if (nextPhase) {
+                phaseTimer = setTimeout(() => {
+                    if (isBreathing) {
+                        if (nextPhase === 'inhale') {
+                            totalCycles++;
+                        }
+                        nextPhase();
+                    }
+                }, duration);
+            }
+        }
+
+        function getInstructionText(phase) {
+            switch (phase) {
+                case 'inhale': return 'Breathe In';
+                case 'hold': return 'Hold';
+                case 'exhale': return 'Breathe Out';
+                case 'ready': return 'Get Ready';
+                default: return '';
+            }
+        }
+
+        function breathingCycle() {
+            if (!isBreathing) return;
+            
+            // Inhale (4 seconds)
+            setPhase('inhale', 4000, () => {
+                // Hold (7 seconds)
+                setPhase('hold', 7000, () => {
+                    // Exhale (8 seconds)
+                    setPhase('exhale', 8000, () => {
+                        // Brief pause before next cycle
+                        setTimeout(() => {
+                            if (isBreathing) {
+                                breathingCycle();
+                            }
+                        }, 1000);
+                    });
+                });
+            });
+        }
+
+        function startBreathing() {
+            if (isBreathing) return;
+            
+            isBreathing = true;
+            sessionStartTime = Date.now();
+            
+            startBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline-block';
+            
+            timer.classList.add('active');
+            instruction.classList.add('active');
+            
+            // Start with ready phase
+            setPhase('ready', 3000, breathingCycle);
+            
+            // Update timer every second
+            const timerInterval = setInterval(() => {
+                if (!isBreathing) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                updateTimer();
+                updateStats();
+            }, 1000);
+        }
+
+        function pauseBreathing() {
+            isBreathing = false;
+            
+            if (phaseTimer) {
+                clearTimeout(phaseTimer);
+                phaseTimer = null;
+            }
+            
+            startBtn.style.display = 'inline-block';
+            pauseBtn.style.display = 'none';
+            
+            breathingCircle.className = 'breathing-circle';
+            instruction.textContent = 'Paused - Click Start to Continue';
+            phaseIndicator.textContent = '';
+        }
+
+        function resetBreathing() {
+            isBreathing = false;
+            currentPhase = 'ready';
+            sessionStartTime = null;
+            totalCycles = 0;
+            longestHold = 0;
+            currentHoldTime = 0;
+            holdStartTime = null;
+            
+            if (phaseTimer) {
+                clearTimeout(phaseTimer);
+                phaseTimer = null;
+            }
+            
+            startBtn.style.display = 'inline-block';
+            pauseBtn.style.display = 'none';
+            
+            breathingCircle.className = 'breathing-circle';
+            instruction.textContent = 'Click Start to Begin';
+            instruction.classList.remove('active');
+            timer.classList.remove('active');
+            timer.textContent = '0:00';
+            phaseIndicator.textContent = '';
+            
+            updateStats();
+        }
+
+        // Initialize
+        createParticles();
+        updateStats();
+    </script>
+</body>
+</html>
